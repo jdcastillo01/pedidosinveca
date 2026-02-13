@@ -1,0 +1,288 @@
+/* Variables de color y estilo */
+:root {
+    --bg-main: #0f172a;         /* Azul muy oscuro */
+    --sidebar-bg: #1e293b;     /* Azul grisáceo */
+    --accent: #22c55e;          /* Verde WhatsApp vibrante */
+    --accent-hover: #16a34a;
+    --text-white: #f8fafc;
+    --text-muted: #94a3b8;
+    --glass: rgba(255, 255, 255, 0.03);
+    --border: rgba(255, 255, 255, 0.08);
+    --danger: #ef4444;
+}
+
+/* Base */
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-white);
+    height: 100vh;
+    display: flex;
+}
+
+/* Contenedor principal para alinear con el HTML anterior */
+.dashboard, .app-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* Sidebar / Panel Lateral */
+header, .sidebar {
+    width: 260px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+}
+
+h1 {
+    font-size: 1.5rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2.5rem;
+    margin-top: 0;
+}
+
+h1 span { color: var(--text-white); font-weight: 300; }
+
+/* Sección de Importación y Botones del Sidebar */
+.import-card, .import-section, .header-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.custom-file-upload, .btn-import, .nav-item {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    color: var(--text-white);
+    padding: 12px 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.custom-file-upload:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-clear, .btn-delete-all {
+    margin-top: auto;
+    color: var(--danger);
+    text-decoration: none;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 10px;
+    opacity: 0.7;
+}
+
+.btn-clear:hover { opacity: 1; text-decoration: underline; }
+
+/* Área de Contenido Principal */
+.table-container, .content {
+    flex: 1;
+    padding: 2.5rem;
+    overflow-y: auto;
+    background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+}
+
+/* Tabla */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px; /* Espacio entre filas */
+}
+
+th {
+    text-align: left;
+    padding: 12px 20px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+td {
+    background: var(--glass);
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+td:first-child { border-left: 1px solid var(--border); border-radius: 12px 0 0 12px; }
+td:last-child { border-right: 1px solid var(--border); border-radius: 0 12px 12px 0; }
+
+tr:hover td {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Texto de Clientes */
+.font-bold, .client-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #fff;
+}
+
+/* Badges de Estatus */
+.status-pill, .badge {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.status-espera, .bg-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.status-vendido, .bg-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+
+/* Botones de Acción en la Tabla */
+.actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+.btn-whatsapp, .btn-wa {
+    background: var(--accent);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-whatsapp:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+.btn-status, .btn-icon {
+    background: var(--glass);
+    color: var(--text-white);
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.btn-status:hover { background: #334155; }
+
+.btn-delete, .btn-delete-row {
+    color: #475569;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.btn-delete:hover { color: var(--danger); }
+
+/* Scrollbar estilizada */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+/* Estilizar el contenedor de carga de archivos */
+.import-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Ocultar el input original y crear el botón bonito */
+input[type="file"] {
+    display: none;
+}
+
+.custom-file-upload {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px; /* Botón redondeado moderno */
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    border: none;
+}
+
+.custom-file-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.custom-file-upload i {
+    font-size: 1.1rem;
+}
+
+/* Mantener la posición: hacemos que el cuerpo no haga scroll, solo la tabla */
+.table-container {
+    flex: 1;
+    overflow-y: auto; /* La tabla tendrá su propio scroll */
+    max-height: 80vh; 
+    border-radius: 16px;
+    background: var(--glass);
+}
+
+/* Encabezado de tabla pegajoso (Sticky Header) */
+th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #1e293b; /* Color sólido para que no se transparente al hacer scroll */
+}
+
+:root {
+    --bg: #0f172a; --side: #1e293b; --accent: #22c55e; --text: #f8fafc;
+}
+
+body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+.app-container { display: flex; height: 100vh; }
+
+/* Sidebar & Botón Carga */
+.sidebar { width: 260px; background: var(--side); padding: 2rem 1rem; border-right: 1px solid rgba(255,255,255,0.1); }
+.logo { font-size: 1.5rem; font-weight: 800; color: var(--accent); margin-bottom: 2rem; }
+
+input[type="file"] { display: none; }
+.custom-file-upload {
+    background: linear-gradient(135deg, var(--accent) 0%, #16a34a 100%);
+    color: white; padding: 12px; border-radius: 50px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-weight: 700; box-shadow: 0 4px 15px rgba(34,197,94,0.3); transition: 0.3s;
+}
+.custom-file-upload:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+/* Tabla y Scroll */
+.content { flex: 1; padding: 2rem; overflow-y: auto; }
+.table-wrapper { background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 1rem; color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; position: sticky; top: 0; background: #1e293b; }
+td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+
+/* Estatus y Botones */
+.status-pill { padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; }
+.status-espera { background: rgba(245,158,11,0.2); color: #fbbf24; }
+.status-vendido { background: rgba(34,197,94,0.2); color: #4ade80; }
+
+.actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-icon { background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+.btn-icon:hover { background: rgba(255,255,255,0.15); }
+.btn-icon.del:hover { color: #ef4444; }
+.btn-wa { background: var(--accent); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+
+.btn-clear { display: block; margin-top: 2rem; color: #ef4444; text-decoration: none; text-align: center; font-size: 0.8rem; opacity: 0.6; }
