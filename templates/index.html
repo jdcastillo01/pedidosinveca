@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM PRO | WhatsApp</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo"><i class="fab fa-whatsapp"></i> CRM PRO</div>
+            <nav>
+                <form action="/importar" method="post" enctype="multipart/form-data" id="importForm">
+                    <label for="file-upload" class="custom-file-upload">
+                        <i class="fas fa-file-excel"></i> Cargar Cartera
+                    </label>
+                    <input id="file-upload" type="file" name="file" onchange="this.form.submit()"/>
+                </form>
+                
+                <div class="stats-box">
+                    <span class="stats-label">Clientes en lista</span>
+                    <span id="contador-total" class="stats-number">{{ clientes|length }}</span>
+                </div>
+
+                <a href="/limpiar" class="btn-clear" onclick="return confirm('¿Borrar toda la lista?')">
+                    <i class="fas fa-trash-alt"></i> Vaciar Lista
+                </a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="busqueda" placeholder="Buscar cliente por nombre..." onkeyup="filtrarClientes()">
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente / Razón Social</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th style="text-align:right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-clientes">
+                        {% for cliente in clientes %}
+                        <tr id="fila-{{ cliente.id }}" class="fila-cliente">
+                            <td class="client-name">{{ cliente.nombre }}</td>
+                            <td class="client-tel">+{{ cliente.telefono }}</td>
+                            <td>
+                                <span class="status-pill {{ 'status-vendido' if cliente.estatus == 'Vendido' else 'status-espera' }}">
+                                    {{ cliente.estatus }}
+                                </span>
+                            </td>
+                            <td class="actions">
+                                <button onclick="cambiarEstatus(this, {{ cliente.id }})" class="btn-icon" title="Cambiar Estado">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <a href="https://wa.me/{{ cliente.telefono }}?text={{ ('Hola, quisiera solicitar el pedido para ' + cliente.nombre)|urlencode }}" target="_blank" class="btn-wa">
+                                    <i class="fab fa-whatsapp"></i> Chat
+                                </a>
+                                <button onclick="eliminarCliente({{ cliente.id }})" class="btn-icon del" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Filtrar clientes en tiempo real
+        function filtrarClientes() {
+            const input = document.getElementById('busqueda');
+            const filtro = input.value.toLowerCase();
+            const filas = document.getElementsByClassName('fila-cliente');
+            let visibles = 0;
+
+            for (let i = 0; i < filas.length; i++) {
+                const nombre = filas[i].getElementsByClassName('client-name')[0].innerText.toLowerCase();
+                if (nombre.includes(filtro)) {
+                    filas[i].style.display = "";
+                    visibles++;
+                } else {
+                    filas[i].style.display = "none";
+                }
+            }
+            // Actualizamos el contador dinámicamente si hay búsqueda
+            document.getElementById('contador-total').innerText = visibles;
+        }
+
+        function cambiarEstatus(boton, id) {
+            fetch(`/cambiar_estatus/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                const fila = document.getElementById(`fila-${id}`);
+                const badge = fila.querySelector('.status-pill');
+                badge.textContent = data.nuevo_estatus;
+                badge.className = data.nuevo_estatus === 'Vendido' ? 'status-pill status-vendido' : 'status-pill status-espera';
+            });
+        }
+
+        function eliminarCliente(id) {
+            if(!confirm('¿Eliminar cliente?')) return;
+            fetch(`/eliminar/${id}`, { method: 'DELETE' })
+            .then(() => {
+                const fila = document.getElementById(`fila-${id}`);
+                fila.remove();
+                // Actualizar contador después de borrar
+                const totalActual = document.getElementsByClassName('fila-cliente').length;
+                document.getElementById('contador-total').innerText = totalActual;
+            });
+        }
+    </script>
+</body>
+</html>
