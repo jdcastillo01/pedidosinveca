@@ -2,124 +2,173 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PEDIDOS INVECA | WhatsApp</title>
+    <title>CRM PRO Dual</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="logo"><i class="fab fa-whatsapp"></i> PEDIDOS INVECA</div>
-            <nav>
-                <form action="/importar" method="post" enctype="multipart/form-data" id="importForm">
-                    <label for="file-upload" class="custom-file-upload">
-                        <i class="fas fa-file-excel"></i> Cargar Cartera
-                    </label>
-                    <input id="file-upload" type="file" name="file" onchange="this.form.submit()"/>
-                </form>
-                
-                <div class="stats-box">
-                    <span class="stats-label">Clientes en lista</span>
-                    <span id="contador-total" class="stats-number">{{ clientes|length }}</span>
-                </div>
-
-                <a href="/limpiar" class="btn-clear" onclick="return confirm('¿Borrar toda la lista?')">
-                    <i class="fas fa-trash-alt"></i> Vaciar Lista
-                </a>
+            <div class="logo"><i class="fab fa-whatsapp"></i> CRM DUAL</div>
+            <nav class="menu-nav">
+                <button class="menu-btn {{ 'active' if active_tab == 'ventas' }}" onclick="window.location.href='/?tab=ventas'">
+                    <i class="fas fa-user-friends"></i> Ventas
+                </button>
+                <button class="menu-btn {{ 'active' if active_tab == 'cobranza' }}" onclick="window.location.href='/?tab=cobranza'">
+                    <i class="fas fa-file-invoice-dollar"></i> Cobranza
+                </button>
             </nav>
+            <div class="import-actions">
+                <form id="form-v" action="/importar/ventas" method="post" enctype="multipart/form-data">
+                    <label for="file-v" class="import-label v-bg">Excel Ventas</label>
+                    <input id="file-v" type="file" name="file" onchange="subirArchivo('form-v')"/>
+                </form>
+                <form id="form-c" action="/importar/cobranza" method="post" enctype="multipart/form-data">
+                    <label for="file-c" class="import-label c-bg">Excel Cobros</label>
+                    <input id="file-c" type="file" name="file" onchange="subirArchivo('form-c')"/>
+                </form>
+            </div>
         </aside>
 
-        <main class="content">
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" id="busqueda" placeholder="Buscar cliente por nombre..." onkeyup="filtrarClientes()">
-            </div>
+        <main class="main-content">
+            <section id="tab-ventas" class="tab-content {{ 'active' if active_tab == 'ventas' }}">
+                <div class="section-header">
+                    <h2>Ventas ({{ ventas|length }})</h2>
+                    <div class="header-tools">
+                        <input type="text" class="search-input" placeholder="Buscar cliente..." onkeyup="filterTable('table-ventas', this.value)">
+                        <form action="/borrar_todo/ventas" method="post" onsubmit="confirmarBorrado(event)">
+                            <button type="submit" class="btn-danger-outline">Limpiar Todo</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="table-ventas">
+                        <thead><tr><th>Nombre</th><th>Teléfono</th><th>Estatus</th><th>Acciones</th></tr></thead>
+                        <tbody>
+                            {% for v in ventas %}
+                            <tr>
+                                <td>{{ v.nombre }}</td>
+                                <td>{{ v.telefono }}</td>
+                                <td><span class="pill {{ 'pill-green' if v.estatus == 'Vendido' else 'pill-orange' }}">{{ v.estatus }}</span></td>
+                                <td class="btns">
+                                    <button class="btn-tool" onclick="updateStatus('ventas', {{v.id}}, this)"><i class="fas fa-sync-alt"></i></button>
+                                    <a href="https://wa.me/{{v.telefono}}?text=Buen%20día!%20quisiéramos%20consultarle%20por%20su%20inventario%20a%20{{v.nombre}}" target="_blank" class="btn-wa">Chat</a>
+                                    <button class="btn-tool del" onclick="deleteRecord('ventas', {{v.id}}, this)"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cliente / Razón Social</th>
-                            <th>Teléfono</th>
-                            <th>Estado</th>
-                            <th style="text-align:right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-clientes">
-                        {% for cliente in clientes %}
-                        <tr id="fila-{{ cliente.id }}" class="fila-cliente">
-                            <td class="client-name">{{ cliente.nombre }}</td>
-                            <td class="client-tel">+{{ cliente.telefono }}</td>
-                            <td>
-                                <span class="status-pill {{ 'status-vendido' if cliente.estatus == 'Vendido' else 'status-espera' }}">
-                                    {{ cliente.estatus }}
-                                </span>
-                            </td>
-                            <td class="actions">
-                                <button onclick="cambiarEstatus(this, {{ cliente.id }})" class="btn-icon" title="Cambiar Estado">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                                <a href="https://wa.me/{{ cliente.telefono }}?text={{ ('Hola, quisiera solicitar el pedido para ' + cliente.nombre)|urlencode }}" target="_blank" class="btn-wa">
-                                    <i class="fab fa-whatsapp"></i> Chat
-                                </a>
-                                <button onclick="eliminarCliente({{ cliente.id }})" class="btn-icon del" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <section id="tab-cobranza" class="tab-content {{ 'active' if active_tab == 'cobranza' }}">
+                <div class="section-header">
+                    <h2>Cobranza ({{ cobros|length }})</h2>
+                    <div class="header-tools">
+                        <input type="text" class="search-input" placeholder="Buscar..." onkeyup="filterTable('table-cobranza', this.value)">
+                        <form action="/borrar_todo/cobranza" method="post" onsubmit="confirmarBorrado(event)">
+                            <button type="submit" class="btn-danger-outline">Limpiar Todo</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="table-cobranza">
+                        <thead><tr><th>Nombre</th><th>Teléfono</th><th>Factura</th><th>Monto</th><th>Estatus</th><th>Acciones</th></tr></thead>
+                        <tbody>
+                            {% for c in cobros %}
+                            <tr>
+                                <td>{{ c.nombre }}</td>
+                                <td>{{ c.telefono }}</td>
+                                <td>#{{ c.factura }}</td>
+                                <td>{{ c.monto }}</td>
+                                <td><span class="pill {{ 'pill-green' if 'pagado' in c.estatus.lower() else 'pill-red' }}">{{ c.estatus }}</span></td>
+                                <td class="btns">
+                                    <button class="btn-tool" onclick="updateStatus('cobranza', {{c.id}}, this)"><i class="fas fa-check-double"></i></button>
+                                    <a href="https://wa.me/{{c.telefono}}?text=Buen%20día%2C%20consultamos%20por%20la%20factura%20{{c.factura}}" target="_blank" class="btn-wa c-bg">Cobrar</a>
+                                    <button class="btn-tool del" onclick="deleteRecord('cobranza', {{c.id}}, this)"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
 
     <script>
-        // Filtrar clientes en tiempo real
-        function filtrarClientes() {
-            const input = document.getElementById('busqueda');
-            const filtro = input.value.toLowerCase();
-            const filas = document.getElementsByClassName('fila-cliente');
-            let visibles = 0;
-
-            for (let i = 0; i < filas.length; i++) {
-                const nombre = filas[i].getElementsByClassName('client-name')[0].innerText.toLowerCase();
-                if (nombre.includes(filtro)) {
-                    filas[i].style.display = "";
-                    visibles++;
-                } else {
-                    filas[i].style.display = "none";
-                }
-            }
-            // Actualizamos el contador dinámicamente si hay búsqueda
-            document.getElementById('contador-total').innerText = visibles;
+        // BARRA DE CARGA AL IMPORTAR
+        function subirArchivo(formId) {
+            Swal.fire({
+                title: 'Procesando archivo...',
+                html: 'Espere un momento mientras cargamos los datos',
+                timerProgressBar: true,
+                didOpen: () => { Swal.showLoading() },
+                background: '#1e293b',
+                color: '#fff'
+            });
+            document.getElementById(formId).submit();
         }
 
-        function cambiarEstatus(boton, id) {
-            fetch(`/cambiar_estatus/${id}`)
+        // CONFIRMACIÓN PARA BORRAR TODO
+        function confirmarBorrado(event) {
+            event.preventDefault();
+            const form = event.target;
+            Swal.fire({
+                title: '¿Limpiar lista completa?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#334155',
+                confirmButtonText: 'Sí, borrar todo',
+                cancelButtonText: 'Cancelar',
+                background: '#1e293b',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
+        }
+
+        // ELIMINAR FILA INDIVIDUAL
+        function deleteRecord(tipo, id, btn) {
+            Swal.fire({
+                title: '¿Eliminar fila?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Eliminar',
+                background: '#1e293b',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/eliminar/${tipo}/${id}`, { method: 'DELETE' })
+                    .then(() => {
+                        btn.closest('tr').remove();
+                        Swal.fire({ title: 'Eliminado', icon: 'success', timer: 800, showConfirmButton: false, background: '#1e293b', color: '#fff' });
+                    });
+                }
+            });
+        }
+
+        function updateStatus(tipo, id, btn) {
+            fetch(`/cambiar_estatus/${tipo}/${id}`)
             .then(res => res.json())
             .then(data => {
-                const fila = document.getElementById(`fila-${id}`);
-                const badge = fila.querySelector('.status-pill');
-                badge.textContent = data.nuevo_estatus;
-                badge.className = data.nuevo_estatus === 'Vendido' ? 'status-pill status-vendido' : 'status-pill status-espera';
+                const pill = btn.closest('tr').querySelector('.pill');
+                pill.textContent = data.nuevo_estatus;
+                const txt = data.nuevo_estatus.toLowerCase();
+                pill.className = 'pill ' + (txt.includes('vendido') || txt.includes('pagado') ? 'pill-green' : txt.includes('vender') ? 'pill-orange' : 'pill-red');
             });
         }
 
-        function eliminarCliente(id) {
-            if(!confirm('¿Eliminar cliente?')) return;
-            fetch(`/eliminar/${id}`, { method: 'DELETE' })
-            .then(() => {
-                const fila = document.getElementById(`fila-${id}`);
-                fila.remove();
-                // Actualizar contador después de borrar
-                const totalActual = document.getElementsByClassName('fila-cliente').length;
-                document.getElementById('contador-total').innerText = totalActual;
-            });
+        function filterTable(tableId, query) {
+            const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+            const q = query.toLowerCase();
+            rows.forEach(row => { row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none'; });
         }
     </script>
 </body>
-
 </html>
-
